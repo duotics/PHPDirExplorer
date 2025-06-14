@@ -719,7 +719,7 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
             // Solo recargamos si cambia la configuración de archivos ocultos
             // porque esto requiere volver a procesar los archivos en el servidor
             if (this.settings.showHiddenFiles !== (<?= $show_hidden ? 'true' : 'false' ?>)) {
-                window.location.href = '?path=<?= htmlspecialchars($currentPath) ?>&show_hidden=' + (this.settings.showHiddenFiles ? '1' : '0');
+                window.location.href = '?path=<?= htmlspecialchars(rawurlencode($currentPath)) ?>&show_hidden=' + (this.settings.showHiddenFiles ? '1' : '0');
             } else {
                 this.showSettings = false;
             }
@@ -747,7 +747,7 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item">
-                    <a href="?path=<?= htmlspecialchars($baseDir) ?>" class="text-decoration-none">
+                    <a href="?path=<?= htmlspecialchars(rawurlencode($baseDir)) ?>" class="text-decoration-none">
                         <i class="fas fa-home"></i> Base Directory
                     </a>
                 </li>
@@ -757,7 +757,7 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                         <?php if ($index === count($pathParts) - 1): ?>
                             <?= htmlspecialchars($part['name']) ?>
                         <?php else: ?>
-                            <a href="?path=<?= htmlspecialchars($part['path']) ?>" class="text-decoration-none">
+                            <a href="?path=<?= htmlspecialchars(rawurlencode($part['path'])) ?>" class="text-decoration-none">
                                 <?= htmlspecialchars($part['name']) ?>
                             </a>
                         <?php endif; ?>
@@ -776,7 +776,7 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                             <span :class="darkMode ? 'text-light' : ''">Directories</span>
                         </h5>
                         <?php if ($currentPath !== $baseDir): ?>
-                            <a href="?path=<?= htmlspecialchars($parentPath) ?>" class="btn btn-sm btn-outline-secondary">
+                            <a href="?path=<?= htmlspecialchars(rawurlencode($parentPath)) ?>" class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-arrow-up"></i> Up
                             </a>
                         <?php endif; ?>
@@ -801,7 +801,7 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                                     <?php endif; ?>
 
                                     <div class="dir-name"
-                                        onclick="window.location.href='?path=<?= htmlspecialchars($dir['path']) ?><?= $show_hidden ? '&show_hidden=1' : '' ?>'">
+                                        onclick="window.location.href='?path=<?= htmlspecialchars(rawurlencode($dir['path'])) ?><?= $show_hidden ? '&show_hidden=1' : '' ?>'">
                                         <i class="fas fa-folder folder-icon"></i>
                                         <?= htmlspecialchars($dir['name']) ?>
                                         <?php if ($dir['is_hidden']): ?>
