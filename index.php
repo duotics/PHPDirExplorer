@@ -1,4 +1,7 @@
 <?php
+// Include version information
+require_once 'version.php';
+
 // ============================================================================
 // CONFIGURACIÓN PERSONALIZABLE
 // ============================================================================
@@ -396,6 +399,7 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
             background-color: var(--bg-color);
             color: var(--text-color);
             transition: background-color 0.3s, color 0.3s;
+            padding-bottom: 60px; /* Space for bottom bar */
         }
 
         .web-icon {
@@ -1038,6 +1042,46 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
             :style="`position: fixed; left: ${tooltipPosition.x + 15}px; top: ${tooltipPosition.y + 10}px; z-index: 999;`"
             class="bg-dark text-white py-1 px-2 rounded text-sm" style="max-width: 300px;">
             <p class="mb-0" x-text="tooltipContent"></p>
+        </div>
+    </div>
+
+    <!-- Bottom Bar using Bootstrap classes -->
+    <div class="fixed-bottom border-top shadow-sm py-2 px-3 d-flex justify-content-between align-items-center small" 
+         :class="darkMode ? 'bg-dark text-light border-secondary' : 'bg-light text-dark border-light'">
+        <div class="text-muted fw-medium">
+            <i class="fas fa-code me-1"></i>
+            PHP Directory Explorer
+        </div>
+        <div class="position-relative">
+            <span class="badge fs-6 user-select-none" 
+                  :class="darkMode ? 'bg-info' : 'bg-primary'"
+                  x-data="{ showVersionTooltip: false }"
+                  @mouseenter="showVersionTooltip = true"
+                  @mouseleave="showVersionTooltip = false"
+                  style="cursor: pointer; transition: transform 0.2s;"
+                  @mouseover="$el.style.transform = 'scale(1.05)'"
+                  @mouseout="$el.style.transform = 'scale(1)'">
+                v<?= $VERSION_NUMBER ?> <?= $VERSION_STATUS ?>
+            </span>
+            
+            <!-- Version tooltip using Bootstrap tooltip -->
+            <div x-show="showVersionTooltip" 
+                 x-cloak
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="position-absolute bottom-100 end-0 mb-2">
+                <div class="bg-dark text-white py-1 px-2 rounded text-nowrap" style="font-size: 0.75rem;">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    Released: <?= date('F j, Y', strtotime($VERSION_DATE)) ?>
+                    <!-- Tooltip arrow -->
+                    <div class="position-absolute top-100 start-50 translate-middle-x" 
+                         style="width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid #000;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
