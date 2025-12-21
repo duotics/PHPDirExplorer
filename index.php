@@ -1,15 +1,86 @@
 <?php
-// Configuración inicial (se mantiene igual)
+// ============================================================================
+// CONFIGURACIÓN PERSONALIZABLE
+// ============================================================================
+
+// Configuración del directorio base cuando se accede desde la raíz
+// Opciones:
+// '' (vacío) = usar directorio actual del script (PHPDirExplorer)
+// '../' = usar directorio padre (un nivel arriba)
+// '../../' = usar directorio abuelo (dos niveles arriba) 
+// '/ruta/absoluta' = usar ruta absoluta específica
+// './otra-carpeta' = usar carpeta específica relativa al script
+$ROOT_BASE_CONFIG = '../'; // Por defecto: directorio padre
+
+// ============================================================================
+// DETECCIÓN AUTOMÁTICA DE CONTEXTO
+// ============================================================================
+
 $scriptDir = dirname(__FILE__);
-$baseDir = $scriptDir;
+
+// Determinar si estamos siendo accedidos via rewrite desde una URL de directorio raíz
+// Esto detecta si el REQUEST_URI apunta a un directorio pero el SCRIPT_NAME apunta a nuestro index.php
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+
+// Extraer la parte del path sin parámetros
+$requestPath = strtok($requestUri, '?');
+$scriptPath = dirname($scriptName);
+
+// Detectar si estamos en modo "root access":
+// 1. El REQUEST_URI termina en '/' (acceso a directorio)
+// 2. O el REQUEST_URI termina en '/index.php' pero no apunta directamente a nuestro script
+// 3. Y el script que se está ejecutando está en una subcarpeta
+$isRootAccess = false;
+
+if (rtrim($requestPath, '/') !== rtrim($scriptPath, '/')) {
+    // Si la ruta solicitada es diferente a la ruta del script, estamos en modo rewrite
+    $isRootAccess = (
+        str_ends_with($requestPath, '/') || 
+        str_ends_with($requestPath, '/index.php')
+    );
+}
+
+// ============================================================================
+// CONFIGURACIÓN DEL DIRECTORIO BASE
+// ============================================================================
+
+if ($isRootAccess && !empty($ROOT_BASE_CONFIG)) {
+    // Estamos en modo root access, usar la configuración personalizada
+    if ($ROOT_BASE_CONFIG[0] === '/') {
+        // Ruta absoluta
+        $baseDir = $ROOT_BASE_CONFIG;
+    } else {
+        // Ruta relativa al directorio del script
+        $baseDir = realpath($scriptDir . '/' . $ROOT_BASE_CONFIG) ?: $scriptDir;
+    }
+} else {
+    // Acceso directo al PHPDirExplorer o configuración vacía
+    $baseDir = $scriptDir;
+}
+
 $baseUrl = '';
 
 // Si estamos en un entorno web, intentar determinar la URL base
-$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-$scriptPath = dirname($scriptName);
 if ($scriptPath !== '/' && $scriptPath !== '\\') {
     $baseUrl = $scriptPath;
 }
+
+// ============================================================================
+// DEBUG (descomenta las siguientes líneas para debug)
+// ============================================================================
+/*
+echo "<!-- DEBUG INFO
+Request URI: $requestUri
+Request Path: $requestPath
+Script Name: $scriptName
+Script Path: $scriptPath
+Script Dir: $scriptDir
+Is Root Access: " . ($isRootAccess ? 'YES' : 'NO') . "
+Base Dir: $baseDir
+Root Base Config: $ROOT_BASE_CONFIG
+-->";
+*/
 
 // Function to get absolute path safely
 function getAbsolutePath($path)

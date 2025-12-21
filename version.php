@@ -1,0 +1,4 @@
+<?php
+$VERSION_DATE = '20251221';
+$VERSION_NUMBER = '0.2.0';
+$VERSION_STATUS = 'beta';
