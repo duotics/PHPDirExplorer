@@ -150,6 +150,7 @@ function getDirectories($path, $showHidden = false)
                 $relativeUrl = getRelativeUrl($fullPath);
                 $perms = getPerms($fullPath);
                 $size = getDirSize($fullPath, 2); // Limitar a profundidad 2 para rendimiento
+                $owner = getOwner($fullPath);
 
                 $directories[] = [
                     'name' => $item,
@@ -158,7 +159,8 @@ function getDirectories($path, $showHidden = false)
                     'perms' => $perms,
                     'size' => $size,
                     'formatted_size' => formatSize($size),
-                    'is_hidden' => $item[0] === '.'
+                    'is_hidden' => $item[0] === '.',
+                    'owner' => $owner
                 ];
             }
         }
@@ -195,6 +197,7 @@ function getFiles($path, $showHidden = false)
                 $relativeUrl = getRelativeUrl($fullPath);
                 $perms = getPerms($fullPath);
                 $size = filesize($fullPath);
+                $owner = getOwner($fullPath);
 
                 $files[] = [
                     'name' => $item,
@@ -203,7 +206,8 @@ function getFiles($path, $showHidden = false)
                     'perms' => $perms,
                     'size' => $size,
                     'formatted_size' => formatSize($size),
-                    'is_hidden' => $item[0] === '.'
+                    'is_hidden' => $item[0] === '.',
+                    'owner' => $owner
                 ];
             }
         }
@@ -316,6 +320,46 @@ function formatSize($bytes)
     $bytes /= pow(1024, $pow);
 
     return round($bytes, 2) . ' ' . $units[$pow];
+}
+
+// Función para obtener propietario y grupo del archivo
+function getOwner($path)
+{
+    $owner = 'unknown';
+    $group = 'unknown';
+    $uid = null;
+    $gid = null;
+    
+    try {
+        $uid = fileowner($path);
+        $gid = filegroup($path);
+        
+        // Intentar obtener el nombre del propietario
+        if (function_exists('posix_getpwuid') && $uid !== false) {
+            $ownerInfo = posix_getpwuid($uid);
+            $owner = $ownerInfo['name'] ?? $uid;
+        } else {
+            $owner = $uid;
+        }
+        
+        // Intentar obtener el nombre del grupo
+        if (function_exists('posix_getgrgid') && $gid !== false) {
+            $groupInfo = posix_getgrgid($gid);
+            $group = $groupInfo['name'] ?? $gid;
+        } else {
+            $group = $gid;
+        }
+    } catch (Exception $e) {
+        // Silenciar errores
+    }
+    
+    return [
+        'owner' => $owner,
+        'group' => $group,
+        'uid' => $uid,
+        'gid' => $gid,
+        'is_root' => ($owner === 'root' || $uid === 0)
+    ];
 }
 
 // La lógica principal se mantiene igual
@@ -836,6 +880,41 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
             font-weight: 500;
         }
 
+        /* Owner Badge */
+        .owner-badge {
+            padding: 4px 8px;
+            font-size: 0.65rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .owner-badge i {
+            font-size: 0.6rem;
+        }
+
+        .owner-root {
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+        }
+
+        .owner-user {
+            background: rgba(16, 185, 129, 0.15);
+            color: #059669;
+        }
+
+        .dark-mode .owner-root {
+            color: #f87171;
+        }
+
+        .dark-mode .owner-user {
+            color: #34d399;
+        }
+
         /* Hidden Items */
         .hidden-item {
             opacity: 0.6;
@@ -1000,6 +1079,7 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
         .setting-icon.size { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
         .setting-icon.perms { background: rgba(16, 185, 129, 0.15); color: var(--success); }
         .setting-icon.hidden { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .setting-icon.owner { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
 
         .setting-label {
             font-weight: 500;
@@ -1351,6 +1431,12 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                                               x-show="settings.showPermissions">
                                             <?= $dir['perms']['octal'] ?>
                                         </span>
+                                        <span class="owner-badge <?= $dir['owner']['is_root'] ? 'owner-root' : 'owner-user' ?>" 
+                                              title="UID: <?= $dir['owner']['uid'] ?> / GID: <?= $dir['owner']['gid'] ?>"
+                                              x-show="settings.showOwners">
+                                            <i class="fas <?= $dir['owner']['is_root'] ? 'fa-user-shield' : 'fa-user' ?>"></i>
+                                            <?= htmlspecialchars($dir['owner']['owner']) ?>:<?= htmlspecialchars($dir['owner']['group']) ?>
+                                        </span>
                                         <span class="size-badge" x-show="settings.showSizes">
                                             <?= $dir['formatted_size'] ?>
                                         </span>
@@ -1421,6 +1507,12 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                                               title="<?= $file['perms']['symbolic'] ?>"
                                               x-show="settings.showPermissions">
                                             <?= $file['perms']['octal'] ?>
+                                        </span>
+                                        <span class="owner-badge <?= $file['owner']['is_root'] ? 'owner-root' : 'owner-user' ?>" 
+                                              title="UID: <?= $file['owner']['uid'] ?> / GID: <?= $file['owner']['gid'] ?>"
+                                              x-show="settings.showOwners">
+                                            <i class="fas <?= $file['owner']['is_root'] ? 'fa-user-shield' : 'fa-user' ?>"></i>
+                                            <?= htmlspecialchars($file['owner']['owner']) ?>:<?= htmlspecialchars($file['owner']['group']) ?>
                                         </span>
                                         <span class="size-badge" x-show="settings.showSizes">
                                             <?= $file['formatted_size'] ?>
@@ -1500,6 +1592,19 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                         </label>
                     </div>
                     
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-icon owner">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <span class="setting-label">Show Owners</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" x-model="tempSettings.showOwners">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
                     <!-- Info message about hidden files -->
                     <div class="settings-info-message" x-show="tempSettings.showHiddenFiles !== settings.showHiddenFiles">
                         <i class="fas fa-info-circle"></i>
@@ -1574,14 +1679,16 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                 settings: {
                     showSizes: true,
                     showPermissions: true,
-                    showHiddenFiles: <?= $show_hidden ? 'true' : 'false' ?>
+                    showHiddenFiles: <?= $show_hidden ? 'true' : 'false' ?>,
+                    showOwners: false
                 },
                 
                 // Temporary settings for modal (to allow cancel)
                 tempSettings: {
                     showSizes: true,
                     showPermissions: true,
-                    showHiddenFiles: <?= $show_hidden ? 'true' : 'false' ?>
+                    showHiddenFiles: <?= $show_hidden ? 'true' : 'false' ?>,
+                    showOwners: false
                 },
                 
                 // Initialize the app
@@ -1600,6 +1707,10 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                     this.$watch('settings.showPermissions', (value) => {
                         localStorage.setItem('explorer_showPermissions', JSON.stringify(value));
                     });
+                    
+                    this.$watch('settings.showOwners', (value) => {
+                        localStorage.setItem('explorer_showOwners', JSON.stringify(value));
+                    });
                 },
                 
                 // Load settings from localStorage
@@ -1611,6 +1722,10 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                     // Show Permissions - default to true
                     const savedShowPermissions = localStorage.getItem('explorer_showPermissions');
                     this.settings.showPermissions = savedShowPermissions !== null ? JSON.parse(savedShowPermissions) : true;
+                    
+                    // Show Owners - default to false
+                    const savedShowOwners = localStorage.getItem('explorer_showOwners');
+                    this.settings.showOwners = savedShowOwners !== null ? JSON.parse(savedShowOwners) : false;
                     
                     // Show Hidden Files - sync with URL parameter (handled by PHP)
                     // This is already set from PHP: <?= $show_hidden ? 'true' : 'false' ?>
@@ -1651,10 +1766,12 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                     // Apply temp settings to actual settings
                     this.settings.showSizes = this.tempSettings.showSizes;
                     this.settings.showPermissions = this.tempSettings.showPermissions;
+                    this.settings.showOwners = this.tempSettings.showOwners;
                     
                     // Save to localStorage
                     localStorage.setItem('explorer_showSizes', JSON.stringify(this.settings.showSizes));
                     localStorage.setItem('explorer_showPermissions', JSON.stringify(this.settings.showPermissions));
+                    localStorage.setItem('explorer_showOwners', JSON.stringify(this.settings.showOwners));
                     localStorage.setItem('explorer_showHiddenFiles', JSON.stringify(this.tempSettings.showHiddenFiles));
                     
                     // Check if hidden files setting changed (requires page reload)
