@@ -8,8 +8,10 @@
 // ============================================================================
 // INFORMACIÓN DEL DESARROLLADOR
 // ============================================================================
-define('DEVELOPER_NAME', 'Daniel');
-define('DEVELOPER_EMAIL', 'daniel@example.com');
+define('DEVELOPER_NAME', 'DUOTICS');
+define('DEVELOPER_EMAIL', 'info@duotics.com');
+define('DEVELOPER_WEBSITE', 'https://duotics.com');
+define('DEVELOPER_LOCATION', 'Cuenca, Ecuador');
 define('APP_NAME', 'PHP Directory Explorer');
 define('APP_DESCRIPTION', 'Explorador de directorios web desarrollado en PHP');
 

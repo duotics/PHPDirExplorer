@@ -28,10 +28,58 @@ A modern PHP-based directory explorer designed for web developers. Navigate your
 
 ## Installation
 
-1. Clone the repository:
-   git clone https://github.com/duotics/PHPDirExplorer.git
-2. Copy `index.php` to your web server's document root or any directory you want to explore.
-3. Access it through your web browser: http://localhost/PHPDirExplorer/
+### Quick Install (Recommended)
+
+1. **Clone the repository** en la raíz de tu webserver como `.explorer`:
+   ```bash
+   cd /var/www/html  # o tu document root
+   git clone https://github.com/duotics/PHPDirExplorer.git .explorer
+   ```
+
+2. **Configura el .htaccess** en el directorio padre (raíz del webserver):
+   ```bash
+   cp .explorer/.htaccess.example .htaccess
+   ```
+   
+   > ⚠️ **Importante**: El `.htaccess` debe estar al **mismo nivel** que la carpeta `.explorer`, NO dentro de ella.
+
+3. **Estructura final**:
+   ```
+   /var/www/html/
+   ├── .htaccess          ← Copiado desde .htaccess.example
+   ├── .explorer/         ← Repositorio clonado
+   │   ├── index.php
+   │   ├── config.php
+   │   ├── functions.php
+   │   └── ...
+   ├── tu-proyecto-1/
+   ├── tu-proyecto-2/
+   └── ...
+   ```
+
+4. **Accede** a través de tu navegador: `http://localhost/`
+
+### Requisitos de Apache
+
+Asegúrate de que Apache tenga habilitado el módulo `mod_rewrite`:
+```bash
+sudo a2enmod rewrite
+sudo systemctl restart apache2
+```
+
+Y que tu configuración de Apache permita `.htaccess` (en el VirtualHost o apache2.conf):
+```apache
+<Directory /var/www/html>
+    AllowOverride All
+</Directory>
+```
+
+### Instalación Manual (Alternativa)
+
+Si no quieres usar `.htaccess`, puedes acceder directamente a:
+```
+http://localhost/.explorer/
+```
 
 
 ## Usage

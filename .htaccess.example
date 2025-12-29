@@ -1,0 +1,28 @@
+# =============================================================================
+# PHPDirExplorer - .htaccess Configuration
+# =============================================================================
+# Este archivo debe colocarse en el DIRECTORIO PADRE de .explorer
+# (es decir, en la raíz de tu webserver, al mismo nivel que la carpeta .explorer)
+#
+# Ejemplo de estructura:
+#   /var/www/html/           <-- Colocar este .htaccess aquí
+#   /var/www/html/.explorer/ <-- Carpeta del proyecto
+#
+# =============================================================================
+
+# Habilita la reescritura de URL
+RewriteEngine On
+
+# Rewrite genérico para ejecutar .explorer cuando se accede a la raíz del directorio
+# Funciona en cualquier ruta, no solo /www/
+
+# Si se accede al directorio raíz (con o sin barra final), usar .explorer/index.php
+DirectoryIndex .explorer/index.php
+
+# Regla alternativa para casos donde DirectoryIndex no funciona
+RewriteCond %{REQUEST_URI} ^(.*/)?$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^$ .explorer/index.php [L]
+
+# Si se accede específicamente a index.php en la raíz, usar .explorer/index.php
+RewriteRule ^index\.php$ .explorer/index.php [L]

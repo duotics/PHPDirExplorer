@@ -1219,6 +1219,39 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
             font-weight: 500;
             font-size: 0.85rem;
             color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        .footer-separator {
+            color: var(--text-muted);
+            opacity: 0.5;
+            margin: 0 4px;
+        }
+
+        .footer-developer-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .footer-developer-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .footer-made-with {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .footer-made-with .fa-heart {
+            animation: heartbeat 1.5s ease infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
         }
 
         .version-badge {
@@ -1639,12 +1672,20 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
         <div class="bottom-bar-brand">
             <i class="fas fa-code"></i>
             <span>PHP Directory Explorer</span>
+            <span class="footer-separator">|</span>
+            <a href="https://duotics.com" target="_blank" class="footer-developer-link">
+                DUOTICS
+            </a>
+            <span class="footer-separator">•</span>
+            <span class="footer-made-with">
+                Desarrollado con <i class="fas fa-heart text-danger"></i> en Cuenca, Ecuador
+            </span>
         </div>
         <div x-data="{ showVersionTooltip: false }" class="position-relative">
             <span class="version-badge"
                   @mouseenter="showVersionTooltip = true"
                   @mouseleave="showVersionTooltip = false">
-                v<?= $VERSION_NUMBER ?> <?= $VERSION_STATUS ?>
+                v<?= $VERSION_NUMBER ?>
             </span>
             
             <div x-show="showVersionTooltip" 
@@ -1657,6 +1698,9 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                 <div class="custom-tooltip text-nowrap">
                     <i class="fas fa-calendar-alt me-1"></i>
                     Released: <?= date('F j, Y', strtotime($VERSION_DATE)) ?>
+                    <br>
+                    <i class="fas fa-envelope me-1"></i>
+                    <a href="mailto:info@duotics.com" class="text-light">info@duotics.com</a>
                 </div>
             </div>
         </div>
