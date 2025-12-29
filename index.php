@@ -66,7 +66,14 @@ $baseUrl = '';
 
 // Si estamos en un entorno web, intentar determinar la URL base
 if ($scriptPath !== '/' && $scriptPath !== '\\') {
-    $baseUrl = $scriptPath;
+    // Si estamos en modo root access, el baseUrl debe apuntar al directorio padre
+    // para que las URLs de "Open in browser" no incluyan .explorer
+    if ($isRootAccess && !empty($ROOT_BASE_CONFIG)) {
+        // Remover .explorer del path para obtener la URL correcta
+        $baseUrl = dirname($scriptPath);
+    } else {
+        $baseUrl = $scriptPath;
+    }
 }
 
 // ============================================================================
