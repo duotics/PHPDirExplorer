@@ -359,7 +359,11 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Directory Explorer</title>
-    <!-- Bootstrap CSS (actualizado a 5.3.0) -->
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -367,333 +371,563 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --success-color: #198754;
-            --info-color: #0dcaf0;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-
-            --bg-color: #f5f5f5;
-            --text-color: #212529;
-            --card-bg: #ffffff;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --hover-bg: rgba(13, 110, 253, 0.05);
-            --path-bg: rgba(13, 110, 253, 0.1);
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --info: #06b6d4;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            --bg-gradient-start: #f8fafc;
+            --bg-gradient-end: #e2e8f0;
+            --bg-color: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --card-border: rgba(255, 255, 255, 0.5);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --border-color: rgba(148, 163, 184, 0.2);
+            --hover-bg: rgba(99, 102, 241, 0.08);
+            --path-bg: rgba(99, 102, 241, 0.1);
+            --glass-blur: blur(20px);
+            
+            --folder-color: #f59e0b;
+            --file-color: #64748b;
+            --web-color: #6366f1;
         }
 
         .dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            /* Color de texto más claro para mejor contraste */
-            --card-bg: #1e1e1e;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --hover-bg: rgba(255, 255, 255, 0.05);
-            --path-bg: rgba(13, 110, 253, 0.3);
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.8);
+            --card-border: rgba(51, 65, 85, 0.5);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --border-color: rgba(51, 65, 85, 0.5);
+            --hover-bg: rgba(99, 102, 241, 0.15);
+            --path-bg: rgba(99, 102, 241, 0.2);
+            
+            --folder-color: #fbbf24;
+            --file-color: #94a3b8;
+        }
 
-            /* Añade estas variables adicionales para colores específicos en modo oscuro */
-            --folder-name-color: #ffffff;
-            --file-name-color: #f0f0f0;
-            --icon-folder-color: #ffc107;
-            /* Amarillo más brillante para carpetas */
-            --icon-file-color: #adb5bd;
-            /* Gris más claro para archivos */
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--bg-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-color);
             color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-            padding-bottom: 60px; /* Space for bottom bar */
+            min-height: 100vh;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding-bottom: 70px;
         }
 
-        .web-icon {
-            color: var(--primary-color);
+        .dark-mode body {
+            background: var(--bg-color);
         }
 
-        .folder-icon {
-            color: var(--warning-color);
-            margin-right: 8px;
+        /* Animated background */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
         }
 
-        .file-icon {
-            color: var(--secondary-color);
-            margin-right: 8px;
+        .bg-decoration::before,
+        .bg-decoration::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s infinite ease-in-out;
         }
 
-        .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: none;
-            margin-bottom: 20px;
-            background-color: var(--card-bg);
-            transition: background-color 0.3s;
+        .bg-decoration::before {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            top: -200px;
+            right: -100px;
+        }
+
+        .bg-decoration::after {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(16, 185, 129, 0.15));
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -10s;
+        }
+
+        .dark-mode .bg-decoration::before {
+            opacity: 0.3;
+        }
+
+        .dark-mode .bg-decoration::after {
+            opacity: 0.2;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .dark-mode .glass-card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
         }
 
         .card-header {
-            background-color: var(--card-bg);
+            background: transparent;
             border-bottom: 1px solid var(--border-color);
-            padding: 12px 16px;
+            padding: 15px 20px;
         }
 
-        .directory-container,
-        .file-container {
-            max-height: 70vh;
-            overflow-y: auto;
-            padding: 0;
+        .card-header h5 {
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: -0.02em;
         }
 
-        .directory-item,
-        .file-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            transition: background-color 0.2s ease;
-        }
-
-        .directory-item:hover,
-        .file-item:hover {
-            background-color: var(--hover-bg);
-        }
-
-        .directory-item:last-child,
-        .file-item:last-child {
-            border-bottom: none;
-        }
-
-        .dir-name {
-            cursor: pointer;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        .me-2 {
-            margin-right: 12px !important;
-        }
-
-        .breadcrumb {
-            background-color: var(--card-bg);
-            padding: 12px 15px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .current-path {
-            background-color: var(--path-bg);
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            word-break: break-all;
-        }
-
+        /* Header Section */
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            padding: 20px 0;
         }
 
-        .btn-outline-secondary {
-            border-color: var(--border-color);
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        /* Estilo para destacar los iconos de web */
-        .web-accessible {
-            animation: pulse 2s infinite;
-            color: var(--primary-color);
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.7;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
-        /* Estilo para los tooltips */
-        [x-cloak] {
-            display: none !important;
-        }
-
-        .tooltip-inner {
-            max-width: 300px;
-        }
-
-        /* Estilo para el botón de tema */
-        .theme-toggle {
-            cursor: pointer;
-            margin-right: 15px;
-            padding: 5px 10px;
-            border-radius: 50px;
-            transition: all 0.3s ease;
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            background-color: var(--card-bg);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: white;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
 
-        .theme-toggle:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin: 0;
+            background: linear-gradient(135deg, var(--text-color) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .theme-toggle i {
-            font-size: 1.2rem;
-        }
-
-        /* Estilos específicos para modo oscuro */
-        .dark-mode .breadcrumb-item.active {
-            color: #adb5bd;
-        }
-
-        .dark-mode .text-muted {
-            color: #adb5bd !important;
-        }
-
-        .dark-mode .badge.bg-primary {
-            background-color: #0d6efd !important;
-        }
-
-        .dark-mode a {
-            color: #6ea8fe;
-        }
-
-        .dark-mode a:hover {
-            color: #9ec5fe;
-        }
-
-        .dark-mode .directory-item,
-        .dark-mode .file-item {
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-            color: var(--text-color);
-        }
-
-        .dark-mode .folder-icon {
-            color: var(--icon-folder-color);
-        }
-
-        .dark-mode .file-icon {
-            color: var(--icon-file-color);
-        }
-
-        .dark-mode .dir-name {
-            color: var(--folder-name-color);
-        }
-
-        .dark-mode .directory-item:hover,
-        .dark-mode .file-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .dark-mode .card,
-        .dark-mode .card-header,
-        .dark-mode .breadcrumb {
-            background-color: var(--card-bg);
-        }
-
-        .dark-mode .theme-toggle {
-            background-color: #2d2d2d;
-        }
-
-        /* ... tus estilos actuales ... */
-
-        .file-meta,
-        .dir-meta {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            font-size: 0.85rem;
-            color: var(--secondary-color);
-            white-space: nowrap;
-            padding-left: 10px;
-            letter-spacing: -0.2px;
-        }
-
-        .perms-badge {
-            padding: 2px 5px;
-            font-size: 0.7rem;
-            border-radius: 3px;
-            font-family: monospace;
-            margin-right: 8px;
-            font-weight: 600;
-        }
-
-        .size-badge {
-            padding: 2px 5px;
-            font-size: 0.7rem;
-            border-radius: 3px;
-            margin-right: 8px;
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
             font-weight: 500;
         }
 
-        /* Estilos para permisos según el nivel */
+        /* Stats Badge */
+        .stats-badge {
+            display: flex;
+            gap: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-item.folders {
+            color: var(--folder-color);
+        }
+
+        .stat-item.files {
+            color: var(--primary);
+        }
+
+        /* Combined Breadcrumb & Path Bar */
+        .breadcrumb-path-bar {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-path-bar .breadcrumb {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .breadcrumb-item a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .breadcrumb-item a:hover {
+            color: var(--primary-dark);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Mini Current Path (right side) */
+        .current-path-mini {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            background: var(--path-bg);
+            padding: 6px 12px;
+            border-radius: 8px;
+            max-width: 50%;
+            overflow: hidden;
+        }
+
+        .current-path-mini i {
+            color: var(--primary);
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .current-path-mini span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 768px) {
+            .breadcrumb-path-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .current-path-mini {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        /* Directory & File Container */
+        .directory-container,
+        .file-container {
+            max-height: 65vh;
+            overflow-y: auto;
+            padding: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        .directory-container::-webkit-scrollbar,
+        .file-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .directory-container::-webkit-scrollbar-thumb,
+        .file-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        /* Items */
+        .directory-item,
+        .file-item {
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .directory-item:hover,
+        .file-item:hover {
+            background: var(--hover-bg);
+            border-color: var(--border-color);
+            transform: translateX(4px);
+        }
+
+        .dir-name,
+        .file-name {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Icons */
+        .icon-wrapper {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .folder-icon-wrapper {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--folder-color);
+        }
+
+        .file-icon-wrapper {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--file-color);
+        }
+
+        .web-icon-wrapper {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .web-icon-wrapper:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+            text-decoration: none;
+        }
+
+        .web-icon-wrapper.disabled {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-muted);
+            opacity: 0.4;
+        }
+
+        /* Meta Information */
+        .item-meta {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+        }
+
+        .perms-badge {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
         .perms-low {
-            background-color: rgba(255, 193, 7, 0.2);
-            color: #b78500;
+            background: rgba(245, 158, 11, 0.15);
+            color: #d97706;
         }
 
         .perms-medium {
-            background-color: rgba(13, 110, 253, 0.2);
-            color: #0a58ca;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
         }
 
         .perms-high {
-            background-color: rgba(220, 53, 69, 0.2);
-            color: #b02a37;
-        }
-
-        .perms-badge code {
-            font-size: 0.7rem;
-        }
-
-        .dark-mode .file-meta,
-        .dark-mode .dir-meta {
-            color: #adb5bd;
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
         }
 
         .dark-mode .perms-low {
-            background-color: rgba(255, 193, 7, 0.3);
-            color: #ffcd39;
+            color: #fbbf24;
         }
 
         .dark-mode .perms-medium {
-            background-color: rgba(13, 110, 253, 0.3);
-            color: #6ea8fe;
+            color: var(--primary-light);
         }
 
         .dark-mode .perms-high {
-            background-color: rgba(220, 53, 69, 0.3);
-            color: #ea868f;
+            color: #f87171;
         }
 
-        .dark-mode .size-badge {
-            background-color: rgba(108, 117, 125, 0.3);
-            color: #e0e0e0;
+        .size-badge {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            border-radius: 8px;
+            background: var(--border-color);
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
-        /* Estilos para el modal de configuración */
+        /* Hidden Items */
+        .hidden-item {
+            opacity: 0.6;
+        }
+
+        .hidden-badge {
+            font-size: 0.65rem;
+            margin-left: 8px;
+            opacity: 0.7;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: none;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px) rotate(15deg);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .theme-toggle i {
+            font-size: 1.1rem;
+        }
+
+        /* Settings Button */
+        .settings-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: none;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+        }
+
+        .settings-btn:hover {
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
+
+        /* Back Button */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: var(--hover-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .btn-back:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateX(-4px);
+        }
+
+        /* Settings Modal */
         .settings-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -701,165 +935,373 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
         }
         
         .settings-modal-content {
-            background-color: var(--card-bg);
-            border-radius: 8px;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border-radius: 24px;
             width: 90%;
-            max-width: 400px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 420px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--card-border);
+            overflow: hidden;
         }
         
         .settings-header {
-            padding: 15px 20px;
+            padding: 24px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
+        .settings-header h5 {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         
         .settings-body {
-            padding: 20px;
+            padding: 24px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: var(--hover-bg);
+            border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .setting-item:hover {
+            transform: translateX(4px);
+        }
+
+        .setting-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .setting-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .setting-icon.size { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+        .setting-icon.perms { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .setting-icon.hidden { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+        .setting-label {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        /* Settings Info Message */
+        .settings-info-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            margin-top: 8px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: var(--info);
+        }
+        
+        .settings-info-message i {
+            font-size: 1rem;
+        }
+        
+        .dark-mode .settings-info-message {
+            background: rgba(6, 182, 212, 0.15);
+        }
+
+        /* Custom Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border-color);
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--primary);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
         }
         
         .settings-footer {
-            padding: 15px 20px;
+            padding: 20px 24px;
             border-top: 1px solid var(--border-color);
-            text-align: right;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
         }
-        
-        .form-check {
-            margin-bottom: 15px;
-        }
-        
-        /* Estilo para archivos ocultos */
-        .hidden-item {
-            opacity: 0.7;
-        }
-        
-        .hidden-item .fa-eye-slash {
-            margin-left: 5px;
-            font-size: 0.7em;
-            opacity: 0.7;
-        }
-        
-        /* Animación para el botón de configuración */
-        .settings-toggle {
+
+        .btn-cancel {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-color);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
-        
-        .settings-toggle:hover {
-            transform: rotate(90deg);
+
+        .btn-cancel:hover {
+            background: var(--hover-bg);
         }
-        
-        .form-switch {
-            padding-left: 2.5em;
-        }
-        
-        .form-switch .form-check-input {
-            width: 3em;
-        }
-        
-        .settings-icon {
-            margin-left: 10px;
-            color: var(--primary-color);
+
+        .btn-save {
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border: none;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
-        
-        .settings-icon:hover {
-            transform: rotate(90deg);
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border-top: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .bottom-bar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .version-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .version-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* Tooltip */
+        .custom-tooltip {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 400px;
+            box-shadow: var(--card-shadow);
+        }
+
+        /* Utilities */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Dark Mode Adjustments */
+        .dark-mode .btn-close {
+            filter: invert(1);
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+            
+            .stats-badge {
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .logo-text h1 {
+                font-size: 1.2rem;
+            }
+            
+            .stat-item {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container py-4" x-data="{ 
-        showTooltip: false, 
-        tooltipContent: '', 
-        tooltipPosition: { x: 0, y: 0 },
-        showSettings: false,
-        
-        // Configuraciones de usuario
-        toggleDarkMode() {
-            this.darkMode = !this.darkMode;
-            localStorage.setItem('darkMode', this.darkMode);
-        },
-        
-        // Nueva configuración
-        settings: {
-            showSizes: localStorage.getItem('showSizes') === 'true',
-            showPermissions: localStorage.getItem('showPermissions') !== 'false',  // Por defecto true
-            showHiddenFiles: localStorage.getItem('showHiddenFiles') === 'true'
-        },
-        
-        // Método para guardar configuraciones
-        saveSettings() {
-            localStorage.setItem('showSizes', this.settings.showSizes);
-            localStorage.setItem('showPermissions', this.settings.showPermissions);
-            localStorage.setItem('showHiddenFiles', this.settings.showHiddenFiles);
-            
-            // Solo recargamos si cambia la configuración de archivos ocultos
-            // porque esto requiere volver a procesar los archivos en el servidor
-            if (this.settings.showHiddenFiles !== (<?= $show_hidden ? 'true' : 'false' ?>)) {
-                window.location.href = '?path=<?= htmlspecialchars(rawurlencode($currentPath)) ?>&show_hidden=' + (this.settings.showHiddenFiles ? '1' : '0');
-            } else {
-                this.showSettings = false;
-            }
-        }
-    }">
-        <div class="page-header">
-            <div class="d-flex align-items-center">
-                <button @click="toggleDarkMode()" class="theme-toggle border-0">
-                    <i class="fas" :class="darkMode ? 'fa-sun text-warning' : 'fa-moon text-primary'"></i>
-                </button>
-                <h1 class="mb-0">
-                    <i class="fas fa-folder-open me-2 text-primary"></i>
-                    Directory Explorer
-                    <i class="fas fa-cog settings-icon" @click="showSettings = true"></i>
-                </h1>
-            </div>
-            <span class="badge bg-primary"><?= count($directories) ?> dirs, <?= count($files) ?> files</span>
-        </div>
-        
-        <div class="current-path">
-            <strong><i class="fas fa-map-marker-alt me-1"></i> Current Path:</strong>
-            <?= htmlspecialchars($currentPath) ?>
-        </div>
+    <!-- Background Decoration -->
+    <div class="bg-decoration"></div>
 
-        <nav aria-label="breadcrumb">
+    <div class="container py-2" x-data="explorerApp()" x-init="init()">
+        <!-- Header -->
+        <div class="page-header mb-0">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fas fa-folder-tree"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Directory Explorer</h1>
+                    <span>Navigate your file system with ease</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="stats-badge">
+                    <div class="stat-item folders">
+                        <i class="fas fa-folder"></i>
+                        <span><?= count($directories) ?> folders</span>
+                    </div>
+                    <div class="stat-item files">
+                        <i class="fas fa-file"></i>
+                        <span><?= count($files) ?> files</span>
+                    </div>
+                </div>
+                <button @click="openSettings()" class="settings-btn">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button @click="toggleDarkMode()" class="theme-toggle">
+                    <i class="fas" :class="darkMode ? 'fa-sun text-warning' : 'fa-moon'"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Combined Breadcrumb & Path Bar -->
+        <nav class="breadcrumb-path-bar mb-3" aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item">
-                    <a href="?path=<?= htmlspecialchars(rawurlencode($baseDir)) ?>" class="text-decoration-none">
-                        <i class="fas fa-home"></i> Base Directory
+                    <a href="?path=<?= htmlspecialchars(rawurlencode($baseDir)) ?>">
+                        <i class="fas fa-home me-1"></i>Home
                     </a>
                 </li>
-
                 <?php foreach ($pathParts as $index => $part): ?>
                     <li class="breadcrumb-item <?= ($index === count($pathParts) - 1) ? 'active' : '' ?>">
                         <?php if ($index === count($pathParts) - 1): ?>
                             <?= htmlspecialchars($part['name']) ?>
                         <?php else: ?>
-                            <a href="?path=<?= htmlspecialchars(rawurlencode($part['path'])) ?>" class="text-decoration-none">
+                            <a href="?path=<?= htmlspecialchars(rawurlencode($part['path'])) ?>">
                                 <?= htmlspecialchars($part['name']) ?>
                             </a>
                         <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ol>
+            <div class="current-path-mini">
+                <i class="fas fa-terminal"></i>
+                <span><?= htmlspecialchars($currentPath) ?></span>
+            </div>
         </nav>
 
-        <div class="row mt-4">
-            <!-- Directory List (Left Column) -->
-            <div class="col-lg-8">
-                <div class="card">
+        <div class="row g-4">
+            <!-- Directory List -->
+            <div class="col-lg-6">
+                <div class="glass-card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-folder me-2" :class="darkMode ? 'text-warning' : 'text-primary'"></i>
-                            <span :class="darkMode ? 'text-light' : ''">Directories</span>
+                        <h5 class="mb-0 d-flex align-items-center gap-2">
+                            <span class="icon-wrapper folder-icon-wrapper" style="width:32px;height:32px;">
+                                <i class="fas fa-folder"></i>
+                            </span>
+                            Directories
                         </h5>
                         <?php if ($currentPath !== $baseDir): ?>
-                            <a href="?path=<?= htmlspecialchars(rawurlencode($parentPath)) ?>" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-arrow-up"></i> Up
+                            <a href="?path=<?= htmlspecialchars(rawurlencode($parentPath)) ?>" class="btn-back">
+                                <i class="fas fa-arrow-up"></i>
+                                Up
                             </a>
                         <?php endif; ?>
                     </div>
@@ -869,30 +1311,33 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                                 <div class="directory-item <?= $dir['is_hidden'] ? 'hidden-item' : '' ?>"
                                     x-on:mouseenter="showTooltip = true; tooltipContent = '<?= htmlspecialchars($dir['path']) ?>'; tooltipPosition = { x: $event.pageX, y: $event.pageY };"
                                     x-on:mouseleave="showTooltip = false">
-                                    <!-- Icono de acceso web -->
+                                    
+                                    <!-- Web Access Icon -->
                                     <?php if (!empty($dir['url'])): ?>
-                                        <a href="<?= htmlspecialchars($dir['url']) ?>" target="_blank" class="me-2"
-                                            title="Open in browser">
-                                            <i class="fas fa-globe web-icon web-accessible"></i>
+                                        <a href="<?= htmlspecialchars($dir['url']) ?>" target="_blank" 
+                                           class="web-icon-wrapper" title="Open in browser"
+                                           onclick="event.stopPropagation();">
+                                            <i class="fas fa-globe"></i>
                                         </a>
                                     <?php else: ?>
-                                        <span class="me-2 text-muted">
-                                            <i class="fas fa-ban web-icon"
-                                                :style="darkMode ? 'opacity: 0.5;' : 'opacity: 0.3;'"></i>
+                                        <span class="web-icon-wrapper disabled">
+                                            <i class="fas fa-globe-americas"></i>
                                         </span>
                                     <?php endif; ?>
 
                                     <div class="dir-name"
                                         onclick="window.location.href='?path=<?= htmlspecialchars(rawurlencode($dir['path'])) ?><?= $show_hidden ? '&show_hidden=1' : '' ?>'">
-                                        <i class="fas fa-folder folder-icon"></i>
-                                        <?= htmlspecialchars($dir['name']) ?>
+                                        <span class="icon-wrapper folder-icon-wrapper">
+                                            <i class="fas fa-folder"></i>
+                                        </span>
+                                        <span><?= htmlspecialchars($dir['name']) ?></span>
                                         <?php if ($dir['is_hidden']): ?>
-                                            <i class="fas fa-eye-slash" title="Hidden directory"></i>
+                                            <i class="fas fa-eye-slash hidden-badge" title="Hidden directory"></i>
                                         <?php endif; ?>
                                     </div>
 
-                                    <!-- Información de permisos y tamaño -->
-                                    <div class="dir-meta">
+                                    <!-- Meta Information -->
+                                    <div class="item-meta">
                                         <?php
                                         $permsClass = 'perms-low';
                                         if (substr($dir['perms']['octal'], -1) == '7') {
@@ -901,20 +1346,20 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                                             $permsClass = 'perms-medium';
                                         }
                                         ?>
-                                        <span class="perms-badge <?= $permsClass ?>" title="<?= $dir['perms']['symbolic'] ?>"
-                                          x-show="settings.showPermissions">
-                                            <code><?= $dir['perms']['octal'] ?></code>
+                                        <span class="perms-badge <?= $permsClass ?>" 
+                                              title="<?= $dir['perms']['symbolic'] ?>"
+                                              x-show="settings.showPermissions">
+                                            <?= $dir['perms']['octal'] ?>
                                         </span>
-                                        <span class="size-badge" :class="darkMode ? 'bg-dark' : 'bg-light'" 
-                                          x-show="settings.showSizes">
+                                        <span class="size-badge" x-show="settings.showSizes">
                                             <?= $dir['formatted_size'] ?>
                                         </span>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="p-4 text-center text-muted">
-                                <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
                                 <p>No directories found</p>
                             </div>
                         <?php endif; ?>
@@ -922,13 +1367,15 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                 </div>
             </div>
 
-            <!-- File List (Right Column) -->
-            <div class="col-lg-4">
-                <div class="card">
+            <!-- File List -->
+            <div class="col-lg-6">
+                <div class="glass-card">
                     <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-file-alt me-2" :class="darkMode ? 'text-info' : 'text-primary'"></i>
-                            <span :class="darkMode ? 'text-light' : ''">Files</span>
+                        <h5 class="mb-0 d-flex align-items-center gap-2">
+                            <span class="icon-wrapper file-icon-wrapper" style="width:32px;height:32px;">
+                                <i class="fas fa-file-alt"></i>
+                            </span>
+                            Files
                         </h5>
                     </div>
                     <div class="file-container">
@@ -937,27 +1384,31 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                                 <div class="file-item <?= $file['is_hidden'] ? 'hidden-item' : '' ?>"
                                     x-on:mouseenter="showTooltip = true; tooltipContent = '<?= htmlspecialchars($file['path']) ?>'; tooltipPosition = { x: $event.pageX, y: $event.pageY };"
                                     x-on:mouseleave="showTooltip = false">
-                                    <!-- Icono de acceso web -->
+                                    
+                                    <!-- Web Access Icon -->
                                     <?php if (!empty($file['url'])): ?>
-                                        <a href="<?= htmlspecialchars($file['url']) ?>" target="_blank" class="me-2"
-                                            title="Open in browser">
-                                            <i class="fas fa-globe web-icon web-accessible"></i>
+                                        <a href="<?= htmlspecialchars($file['url']) ?>" target="_blank" 
+                                           class="web-icon-wrapper" title="Open in browser">
+                                            <i class="fas fa-globe"></i>
                                         </a>
                                     <?php else: ?>
-                                        <span class="me-2 text-muted">
-                                            <i class="fas fa-ban web-icon"
-                                                :style="darkMode ? 'opacity: 0.5;' : 'opacity: 0.3;'"></i>
+                                        <span class="web-icon-wrapper disabled">
+                                            <i class="fas fa-globe-americas"></i>
                                         </span>
                                     <?php endif; ?>
 
-                                    <i class="fas fa-file file-icon"></i>
-                                    <?= htmlspecialchars($file['name']) ?>
-                                    <?php if ($file['is_hidden']): ?>
-                                        <i class="fas fa-eye-slash" title="Hidden file"></i>
-                                    <?php endif; ?>
+                                    <span class="icon-wrapper file-icon-wrapper">
+                                        <i class="fas fa-file"></i>
+                                    </span>
+                                    <span class="file-name">
+                                        <?= htmlspecialchars($file['name']) ?>
+                                        <?php if ($file['is_hidden']): ?>
+                                            <i class="fas fa-eye-slash hidden-badge" title="Hidden file"></i>
+                                        <?php endif; ?>
+                                    </span>
 
-                                    <!-- Información de permisos y tamaño -->
-                                    <div class="file-meta">
+                                    <!-- Meta Information -->
+                                    <div class="item-meta">
                                         <?php
                                         $permsClass = 'perms-low';
                                         if (substr($file['perms']['octal'], -1) == '7') {
@@ -966,20 +1417,20 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
                                             $permsClass = 'perms-medium';
                                         }
                                         ?>
-                                        <span class="perms-badge <?= $permsClass ?>" title="<?= $file['perms']['symbolic'] ?>"
+                                        <span class="perms-badge <?= $permsClass ?>" 
+                                              title="<?= $file['perms']['symbolic'] ?>"
                                               x-show="settings.showPermissions">
-                                            <code><?= $file['perms']['octal'] ?></code>
+                                            <?= $file['perms']['octal'] ?>
                                         </span>
-                                        <span class="size-badge" :class="darkMode ? 'bg-dark' : 'bg-light'"
-                                              x-show="settings.showSizes">
+                                        <span class="size-badge" x-show="settings.showSizes">
                                             <?= $file['formatted_size'] ?>
                                         </span>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="p-4 text-center text-muted">
-                                <i class="fas fa-file fa-3x mb-3 text-muted"></i>
+                            <div class="empty-state">
+                                <i class="fas fa-file"></i>
                                 <p>No files found</p>
                             </div>
                         <?php endif; ?>
@@ -988,105 +1439,119 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
             </div>
         </div>
 
-        <!-- Modal de configuración -->
+        <!-- Settings Modal -->
         <div class="settings-modal" x-show="showSettings" x-cloak
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
+             x-transition:leave-end="opacity-0"
+             @click.self="cancelSettings()">
             <div class="settings-modal-content"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 transform scale-90"
-                 x-transition:enter-end="opacity-100 transform scale-100">
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 @click.stop>
                 <div class="settings-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-cog me-2"></i>
-                        <span :class="darkMode ? 'text-light' : ''">Explorer Settings</span>
+                    <h5>
+                        <i class="fas fa-sliders-h"></i>
+                        Settings
                     </h5>
-                    <button type="button" class="btn-close" @click="showSettings = false" :class="darkMode ? 'btn-close-white' : ''"></button>
+                    <button type="button" class="btn-close" @click="cancelSettings()"></button>
                 </div>
                 <div class="settings-body">
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="showSizes" x-model="settings.showSizes">
-                        <label class="form-check-label" for="showSizes" :class="darkMode ? 'text-light' : ''">
-                            <i class="fas fa-database me-2 text-primary"></i>
-                            Show file/directory sizes
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-icon size">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <span class="setting-label">Show Sizes</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" x-model="tempSettings.showSizes">
+                            <span class="toggle-slider"></span>
                         </label>
                     </div>
                     
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="showPermissions" x-model="settings.showPermissions">
-                        <label class="form-check-label" for="showPermissions" :class="darkMode ? 'text-light' : ''">
-                            <i class="fas fa-lock me-2 text-success"></i>
-                            Show file/directory permissions
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-icon perms">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <span class="setting-label">Show Permissions</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" x-model="tempSettings.showPermissions">
+                            <span class="toggle-slider"></span>
                         </label>
                     </div>
                     
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="showHiddenFiles" x-model="settings.showHiddenFiles">
-                        <label class="form-check-label" for="showHiddenFiles" :class="darkMode ? 'text-light' : ''">
-                            <i class="fas fa-eye me-2 text-warning"></i>
-                            Show hidden files (dot files)
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-icon hidden">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <span class="setting-label">Show Hidden Files</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" x-model="tempSettings.showHiddenFiles">
+                            <span class="toggle-slider"></span>
                         </label>
+                    </div>
+                    
+                    <!-- Info message about hidden files -->
+                    <div class="settings-info-message" x-show="tempSettings.showHiddenFiles !== settings.showHiddenFiles">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Changing hidden files visibility will reload the page</span>
                     </div>
                 </div>
                 <div class="settings-footer">
-                    <button type="button" class="btn btn-secondary me-2" @click="showSettings = false">Cancel</button>
-                    <button type="button" class="btn btn-primary" @click="saveSettings()">Save Settings</button>
+                    <button type="button" class="btn-cancel" @click="cancelSettings()">Cancel</button>
+                    <button type="button" class="btn-save" @click="saveSettings()">
+                        <i class="fas fa-check me-1"></i>Save
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Tooltip personalizado con Alpine.js -->
-        <div x-cloak x-show="showTooltip" x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-            x-transition:leave="transition ease-in duration-100"
-            x-transition:leave-start="opacity-100 transform scale-100"
-            x-transition:leave-end="opacity-0 transform scale-95"
-            :style="`position: fixed; left: ${tooltipPosition.x + 15}px; top: ${tooltipPosition.y + 10}px; z-index: 999;`"
-            class="bg-dark text-white py-1 px-2 rounded text-sm" style="max-width: 300px;">
-            <p class="mb-0" x-text="tooltipContent"></p>
+        <!-- Custom Tooltip -->
+        <div x-cloak x-show="showTooltip" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             :style="`position: fixed; left: ${tooltipPosition.x + 15}px; top: ${tooltipPosition.y + 10}px; z-index: 999;`"
+             class="custom-tooltip">
+            <span x-text="tooltipContent"></span>
         </div>
     </div>
 
-    <!-- Bottom Bar using Bootstrap classes -->
-    <div class="fixed-bottom border-top shadow-sm py-2 px-3 d-flex justify-content-between align-items-center small" 
-         :class="darkMode ? 'bg-dark text-light border-secondary' : 'bg-light text-dark border-light'">
-        <div class="text-muted fw-medium">
-            <i class="fas fa-code me-1"></i>
-            PHP Directory Explorer
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+        <div class="bottom-bar-brand">
+            <i class="fas fa-code"></i>
+            <span>PHP Directory Explorer</span>
         </div>
-        <div class="position-relative">
-            <span class="badge fs-6 user-select-none" 
-                  :class="darkMode ? 'bg-info' : 'bg-primary'"
-                  x-data="{ showVersionTooltip: false }"
+        <div x-data="{ showVersionTooltip: false }" class="position-relative">
+            <span class="version-badge"
                   @mouseenter="showVersionTooltip = true"
-                  @mouseleave="showVersionTooltip = false"
-                  style="cursor: pointer; transition: transform 0.2s;"
-                  @mouseover="$el.style.transform = 'scale(1.05)'"
-                  @mouseout="$el.style.transform = 'scale(1)'">
+                  @mouseleave="showVersionTooltip = false">
                 v<?= $VERSION_NUMBER ?> <?= $VERSION_STATUS ?>
             </span>
             
-            <!-- Version tooltip using Bootstrap tooltip -->
             <div x-show="showVersionTooltip" 
                  x-cloak
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"
                  x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
                  class="position-absolute bottom-100 end-0 mb-2">
-                <div class="bg-dark text-white py-1 px-2 rounded text-nowrap" style="font-size: 0.75rem;">
+                <div class="custom-tooltip text-nowrap">
                     <i class="fas fa-calendar-alt me-1"></i>
                     Released: <?= date('F j, Y', strtotime($VERSION_DATE)) ?>
-                    <!-- Tooltip arrow -->
-                    <div class="position-absolute top-100 start-50 translate-middle-x" 
-                         style="width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid #000;"></div>
                 </div>
             </div>
         </div>
@@ -1094,5 +1559,126 @@ while (strpos($tempPath, $baseDir) === 0 && $tempPath !== $baseDir) {
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Explorer App Script -->
+    <script>
+        function explorerApp() {
+            return {
+                // UI State
+                showTooltip: false,
+                tooltipContent: '',
+                tooltipPosition: { x: 0, y: 0 },
+                showSettings: false,
+                
+                // Settings with defaults
+                settings: {
+                    showSizes: true,
+                    showPermissions: true,
+                    showHiddenFiles: <?= $show_hidden ? 'true' : 'false' ?>
+                },
+                
+                // Temporary settings for modal (to allow cancel)
+                tempSettings: {
+                    showSizes: true,
+                    showPermissions: true,
+                    showHiddenFiles: <?= $show_hidden ? 'true' : 'false' ?>
+                },
+                
+                // Initialize the app
+                init() {
+                    // Load settings from localStorage
+                    this.loadSettings();
+                    
+                    // Sync tempSettings with loaded settings
+                    this.tempSettings = { ...this.settings };
+                    
+                    // Watch for settings changes and auto-save (except hidden files which needs reload)
+                    this.$watch('settings.showSizes', (value) => {
+                        localStorage.setItem('explorer_showSizes', JSON.stringify(value));
+                    });
+                    
+                    this.$watch('settings.showPermissions', (value) => {
+                        localStorage.setItem('explorer_showPermissions', JSON.stringify(value));
+                    });
+                },
+                
+                // Load settings from localStorage
+                loadSettings() {
+                    // Show Sizes - default to true
+                    const savedShowSizes = localStorage.getItem('explorer_showSizes');
+                    this.settings.showSizes = savedShowSizes !== null ? JSON.parse(savedShowSizes) : true;
+                    
+                    // Show Permissions - default to true
+                    const savedShowPermissions = localStorage.getItem('explorer_showPermissions');
+                    this.settings.showPermissions = savedShowPermissions !== null ? JSON.parse(savedShowPermissions) : true;
+                    
+                    // Show Hidden Files - sync with URL parameter (handled by PHP)
+                    // This is already set from PHP: <?= $show_hidden ? 'true' : 'false' ?>
+                    // But we also save to localStorage for persistence
+                    const savedShowHidden = localStorage.getItem('explorer_showHiddenFiles');
+                    if (savedShowHidden !== null) {
+                        const shouldShowHidden = JSON.parse(savedShowHidden);
+                        // If localStorage says different than current URL state, we might need to redirect
+                        // But we only do this on initial load if user hasn't explicitly set URL param
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (!urlParams.has('show_hidden') && shouldShowHidden !== this.settings.showHiddenFiles) {
+                            // Auto-redirect to match saved preference
+                            this.settings.showHiddenFiles = shouldShowHidden;
+                            this.applyHiddenFilesSetting();
+                            return; // Stop here, page will reload
+                        }
+                    }
+                    
+                    // Save current state
+                    localStorage.setItem('explorer_showHiddenFiles', JSON.stringify(this.settings.showHiddenFiles));
+                },
+                
+                // Toggle dark mode
+                toggleDarkMode() {
+                    this.darkMode = !this.darkMode;
+                    localStorage.setItem('darkMode', this.darkMode);
+                },
+                
+                // Open settings modal
+                openSettings() {
+                    // Copy current settings to temp
+                    this.tempSettings = { ...this.settings };
+                    this.showSettings = true;
+                },
+                
+                // Save settings from modal
+                saveSettings() {
+                    // Apply temp settings to actual settings
+                    this.settings.showSizes = this.tempSettings.showSizes;
+                    this.settings.showPermissions = this.tempSettings.showPermissions;
+                    
+                    // Save to localStorage
+                    localStorage.setItem('explorer_showSizes', JSON.stringify(this.settings.showSizes));
+                    localStorage.setItem('explorer_showPermissions', JSON.stringify(this.settings.showPermissions));
+                    localStorage.setItem('explorer_showHiddenFiles', JSON.stringify(this.tempSettings.showHiddenFiles));
+                    
+                    // Check if hidden files setting changed (requires page reload)
+                    if (this.tempSettings.showHiddenFiles !== this.settings.showHiddenFiles) {
+                        this.settings.showHiddenFiles = this.tempSettings.showHiddenFiles;
+                        this.applyHiddenFilesSetting();
+                    } else {
+                        this.showSettings = false;
+                    }
+                },
+                
+                // Apply hidden files setting (requires page reload)
+                applyHiddenFilesSetting() {
+                    const currentPath = '<?= htmlspecialchars(rawurlencode($currentPath)) ?>';
+                    const showHidden = this.settings.showHiddenFiles ? '1' : '0';
+                    window.location.href = `?path=${currentPath}&show_hidden=${showHidden}`;
+                },
+                
+                // Cancel settings changes
+                cancelSettings() {
+                    this.showSettings = false;
+                }
+            };
+        }
+    </script>
 </body>
 </html>
