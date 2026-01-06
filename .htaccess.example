@@ -8,21 +8,34 @@
 #   /var/www/html/           <-- Colocar este .htaccess aquí
 #   /var/www/html/.explorer/ <-- Carpeta del proyecto
 #
+# IMPORTANTE: Debes ajustar "/www" en las reglas según tu configuración:
+#   - Si tu DocumentRoot es /var/www/html → usa "^/$" o "^/index\.php$"
+#   - Si accedes via /www/ (como en XAMPP) → usa "^/www/?$" y "^/www/index\.php$"
+#
 # =============================================================================
 
 # Habilita la reescritura de URL
 RewriteEngine On
 
-# Rewrite genérico para ejecutar .explorer cuando se accede a la raíz del directorio
-# Funciona en cualquier ruta, no solo /www/
+# Archivo índice predeterminado para todos los directorios
+# (Mantiene el comportamiento normal de index.php/index.html en subdirectorios)
+DirectoryIndex index.php index.html
 
-# Si se accede al directorio raíz (con o sin barra final), usar .explorer/index.php
-DirectoryIndex .explorer/index.php
+# =============================================================================
+# OPCIÓN A: Si tu webserver sirve desde la raíz (ej: http://localhost/)
+# =============================================================================
+# RewriteCond %{REQUEST_URI} ^/?$
+# RewriteRule ^$ .explorer/index.php [L]
+#
+# RewriteCond %{REQUEST_URI} ^/index\.php$
+# RewriteRule ^index\.php$ .explorer/index.php [L]
 
-# Regla alternativa para casos donde DirectoryIndex no funciona
-RewriteCond %{REQUEST_URI} ^(.*/)?$
-RewriteCond %{REQUEST_FILENAME} !-f
+# =============================================================================
+# OPCIÓN B: Si accedes via subdirectorio (ej: http://localhost/www/)
+# Ajusta "/www" al nombre de tu subdirectorio
+# =============================================================================
+RewriteCond %{REQUEST_URI} ^/www/?$
 RewriteRule ^$ .explorer/index.php [L]
 
-# Si se accede específicamente a index.php en la raíz, usar .explorer/index.php
+RewriteCond %{REQUEST_URI} ^/www/index\.php$
 RewriteRule ^index\.php$ .explorer/index.php [L]
